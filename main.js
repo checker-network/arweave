@@ -1,0 +1,70 @@
+const getNodes = async () => {
+  const res = await fetch(
+    'https://api.viewblock.io/arweave/nodes?page=1&network=mainnet',
+    {
+      headers: {
+        'Origin': 'https://viewblock.io'
+      }
+    }
+  )
+  const body = await res.json()
+  return [
+    {
+      host: 'arweave.net',
+      port: 443,
+      protocol: 'https'
+    },
+    ...body.docs
+      .map(d => d.id)
+      // Some addresses this API returns are names that are not publicly
+      // reachable
+      .filter(addr => addr.includes(':'))
+      .sort()
+      .map(addr => {
+        const [host, port] = addr.split(':')
+        return {
+          host,
+          port: Number(port),
+          protocol: 'http'
+        }
+      })
+  ]
+}
+
+const measure = async node => {
+  const status = {
+    node,
+    alive: false,
+    timeout: false,
+    ttfbMs: null
+  }
+  const start = new Date()
+  try {
+    const res = await fetch(
+      `${node.protocol}://${node.host}:${node.port}/`,
+      {
+        signal: AbortSignal.timeout(10_000)
+      }
+    )
+    if (!res.ok) {
+      throw new Error()
+    }
+  } catch (err) {
+    if (err.name === 'TimeoutError') {
+      status.timeout = true
+    }
+    return status
+  }
+  status.alive = true
+  status.ttfbMs = new Date().getTime() - start.getTime()
+  return status
+}
+
+const nodes = await getNodes()
+console.log(`Found ${nodes.length} nodes`)
+
+console.log(
+  await measure(
+    nodes[Math.floor(Math.random() * nodes.length)]
+  )
+)
