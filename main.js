@@ -1,3 +1,5 @@
+const ipAddressRegex = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
+
 const getNodes = async () => {
   const res = await fetch(
     'https://api.viewblock.io/arweave/nodes?page=1&network=mainnet',
@@ -16,16 +18,16 @@ const getNodes = async () => {
     },
     ...body.docs
       .map(d => d.id)
-      // Some addresses this API returns are names that are not publicly
-      // reachable
-      .filter(addr => addr.includes(':'))
       .sort()
       .map(addr => {
         const [host, port] = addr.split(':')
+        const protocol = ipAddressRegex.test(host) ? 'http' : 'https'
         return {
           host,
-          port: Number(port),
-          protocol: 'http'
+          port: port
+            ? Number(port)
+            : protocol === 'http' ? 80 : 443,
+          protocol
         }
       })
   ]
