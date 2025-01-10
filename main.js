@@ -1,4 +1,7 @@
-const ipAddressRegex = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
+const IP_ADDRESS_REGEX = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
+const ONE_MINUTE = 60_000
+const MEASUREMENT_DELAY = ONE_MINUTE
+const REFRESH_NODES_DELAY = 10 * ONE_MINUTE
 
 const getNodes = async () => {
   // TODO: Find a publicly documented API
@@ -11,7 +14,7 @@ const getNodes = async () => {
     }
   )
   const body = await res.json()
-  return [
+  const nodes = [
     {
       host: 'arweave.net',
       port: 443,
@@ -22,7 +25,7 @@ const getNodes = async () => {
       .sort()
       .map(addr => {
         const [host, port] = addr.split(':')
-        const protocol = ipAddressRegex.test(host) ? 'http' : 'https'
+        const protocol = IP_ADDRESS_REGEX.test(host) ? 'http' : 'https'
         return {
           host,
           port: port
@@ -32,6 +35,8 @@ const getNodes = async () => {
         }
       })
   ]
+  console.log(`Found ${nodes.length} nodes`)
+  return nodes
 }
 
 const measure = async node => {
@@ -63,8 +68,19 @@ const measure = async node => {
   return measurement
 }
 
-const nodes = await getNodes()
-console.log(`Found ${nodes.length} nodes`)
+let nodes = await getNodes()
+
+;(async () => {
+  while (true) {
+    await new Promise(resolve => setTimeout(resolve, REFRESH_NODES_DELAY))
+    try {
+      nodes = await getNodes()
+    } catch (err) {
+      console.error('Error updating nodes')
+      console.error(err)
+    }
+  }
+})()
 
 while (true) {
   console.log(
@@ -72,6 +88,6 @@ while (true) {
       nodes[Math.floor(Math.random() * nodes.length)]
     )
   )
-  console.error('Waiting 60 seconds...')
-  await new Promise(resolve => setTimeout(resolve, 60_000))
+  console.log('Waiting 60 seconds...')
+  await new Promise(resolve => setTimeout(resolve, MEASUREMENT_DELAY))
 }
