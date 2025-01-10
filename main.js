@@ -35,7 +35,7 @@ const getNodes = async () => {
 }
 
 const measure = async node => {
-  const status = {
+  const measurement = {
     node,
     alive: false,
     timeout: false,
@@ -54,13 +54,13 @@ const measure = async node => {
     }
   } catch (err) {
     if (err.name === 'TimeoutError') {
-      status.timeout = true
+      measurement.timeout = true
     }
-    return status
+    return measurement
   }
-  status.alive = true
-  status.ttfbMs = new Date().getTime() - start.getTime()
-  return status
+  measurement.alive = true
+  measurement.ttfbMs = new Date().getTime() - start.getTime()
+  return measurement
 }
 
 const nodes = await getNodes()
