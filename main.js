@@ -1,7 +1,7 @@
 const IP_ADDRESS_REGEX = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
 const ONE_MINUTE = 60_000
 const MEASUREMENT_DELAY = ONE_MINUTE
-const REFRESH_NODES_DELAY = 10 * ONE_MINUTE
+const UPDATE_NODES_DELAY = 10 * ONE_MINUTE
 
 const getNodes = async () => {
   // TODO: Find a publicly documented API
@@ -72,7 +72,7 @@ let nodes = await getNodes()
 
 ;(async () => {
   while (true) {
-    await new Promise(resolve => setTimeout(resolve, REFRESH_NODES_DELAY))
+    await new Promise(resolve => setTimeout(resolve, UPDATE_NODES_DELAY))
     try {
       nodes = await getNodes()
     } catch (err) {
