@@ -6,7 +6,7 @@ const getNodes = async () => {
     'https://api.viewblock.io/arweave/nodes?page=1&network=mainnet',
     {
       headers: {
-        'Origin': 'https://viewblock.io'
+        Origin: 'https://viewblock.io'
       }
     }
   )
