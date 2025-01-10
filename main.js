@@ -66,8 +66,12 @@ const measure = async node => {
 const nodes = await getNodes()
 console.log(`Found ${nodes.length} nodes`)
 
-console.log(
-  await measure(
-    nodes[Math.floor(Math.random() * nodes.length)]
+while (true) {
+  console.log(
+    await measure(
+      nodes[Math.floor(Math.random() * nodes.length)]
+    )
   )
-)
+  console.error('Waiting 60 seconds...')
+  await new Promise(resolve => setTimeout(resolve, 60_000))
+}
