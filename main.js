@@ -1,6 +1,7 @@
 const ipAddressRegex = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
 
 const getNodes = async () => {
+  // TODO: Find a publicly documented API
   const res = await fetch(
     'https://api.viewblock.io/arweave/nodes?page=1&network=mainnet',
     {
