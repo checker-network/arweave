@@ -1,4 +1,5 @@
 import './vendor/arweave.js'
+import pTimeout, { TimeoutError } from './vendor/p-timeout.js'
 
 const IP_ADDRESS_REGEX = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
 const ONE_MINUTE = 60_000
@@ -11,6 +12,8 @@ const RANDOM_TRANSACTION_IDS = [
   'XO6w3W8dYZnioq-phAbq8SG1Px5kci_j3RmcChS05VY',
   's2aJ5tzVEcSxITsq2G5cZnAhBDplCSkARJEOuNMZ31o'
 ]
+const PING_TIMEOUT = 10_000
+const RETRIEVE_TIMEOUT = 10_000
 
 const getNodes = async () => {
   // TODO: Find a publicly documented API
@@ -59,7 +62,7 @@ const ping = async node => {
     const res = await fetch(
       `${node.protocol}://${node.host}:${node.port}/`,
       {
-        signal: AbortSignal.timeout(10_000)
+        signal: AbortSignal.timeout(PING_TIMEOUT)
       }
     )
     if (!res.ok) {
@@ -87,9 +90,12 @@ const retrieve = async node => {
   }
   const start = new Date()
   try {
-    await arweave.chunks.downloadChunkedData(txId)
+    await pTimeout(
+      arweave.chunks.downloadChunkedData(txId),
+      { milliseconds: RETRIEVE_TIMEOUT }
+    )
   } catch (err) {
-    if (err.name === 'TimeoutError') {
+    if (err instanceof TimeoutError) {
       partialMeasurement.timeout = true
     }
     return partialMeasurement
