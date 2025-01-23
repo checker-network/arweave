@@ -68,6 +68,21 @@ const measure = async node => {
   return measurement
 }
 
+const submit = async measurement => {
+  const res = await fetch('https://arweave.checker.network/measurements', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(measurement)
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to submit measurement (status=${res.status})`, {
+      cause: new Error(await res.text().catch(() => null))
+    })
+  }
+}
+
 let nodes = await getNodes()
 
 ;(async () => {
@@ -83,11 +98,16 @@ let nodes = await getNodes()
 })()
 
 while (true) {
-  console.log(
-    await measure(
-      nodes[Math.floor(Math.random() * nodes.length)]
-    )
+  const measurement = await measure(
+    nodes[Math.floor(Math.random() * nodes.length)]
   )
+  console.log(measurement)
+  try {
+    await submit(measurement)
+  } catch (err) {
+    console.error('Error submitting measurement')
+    console.error(err)
+  }
   console.log('Waiting 60 seconds...')
   await new Promise(resolve => setTimeout(resolve, MEASUREMENT_DELAY))
 }
