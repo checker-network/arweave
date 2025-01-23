@@ -87,7 +87,7 @@ const retrieve = async node => {
   }
   const start = new Date()
   try {
-    await arweave.transactions.get(txId)
+    await arweave.chunks.downloadChunkedData(txId)
   } catch (err) {
     if (err.name === 'TimeoutError') {
       partialMeasurement.timeout = true
