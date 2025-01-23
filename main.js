@@ -133,6 +133,6 @@ while (true) {
       nodes[Math.floor(Math.random() * nodes.length)]
     )
   )
-  console.log('Waiting 60 seconds...')
+  console.log(`Waiting ${MEASUREMENT_DELAY/1_000} seconds...`)
   await new Promise(resolve => setTimeout(resolve, MEASUREMENT_DELAY))
 }
