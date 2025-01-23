@@ -1,7 +1,16 @@
+import './vendor/arweave.js'
+
 const IP_ADDRESS_REGEX = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/
 const ONE_MINUTE = 60_000
 const MEASUREMENT_DELAY = ONE_MINUTE
 const UPDATE_NODES_DELAY = 10 * ONE_MINUTE
+const RANDOM_TRANSACTION_IDS = [
+  'sHqUBKFeS42-CMCvNqPR31yEP63qSJG3ImshfwzJJF8',
+  'vexijI_Ij0GfvWW1wvewlz255_v1Ni7dk9LuQdbi6yw',
+  '797MuCtgdgiDrglJWczz2lMZkFkXInC88Htqv-JuOUQ',
+  'XO6w3W8dYZnioq-phAbq8SG1Px5kci_j3RmcChS05VY',
+  's2aJ5tzVEcSxITsq2G5cZnAhBDplCSkARJEOuNMZ31o'
+]
 
 const getNodes = async () => {
   // TODO: Find a publicly documented API
@@ -39,11 +48,10 @@ const getNodes = async () => {
   return nodes
 }
 
-const measure = async node => {
-  const measurement = {
-    node,
+const ping = async node => {
+  const partialMeasurement = {
     alive: false,
-    timeout: false,
+    timeout: null,
     ttfbMs: null
   }
   const start = new Date()
@@ -59,13 +67,44 @@ const measure = async node => {
     }
   } catch (err) {
     if (err.name === 'TimeoutError') {
-      measurement.timeout = true
+      partialMeasurement.timeout = true
     }
-    return measurement
+    return partialMeasurement
   }
-  measurement.alive = true
-  measurement.ttfbMs = new Date().getTime() - start.getTime()
-  return measurement
+  partialMeasurement.alive = true
+  partialMeasurement.ttfbMs = new Date().getTime() - start.getTime()
+  return partialMeasurement
+}
+
+const retrieve = async node => {
+  const arweave = Arweave.init(node)
+  const txId = RANDOM_TRANSACTION_IDS[Math.floor(Math.random() * RANDOM_TRANSACTION_IDS.length)]
+  const partialMeasurement = {
+    txId,
+    alive: false,
+    timeout: null,
+    durationMs: null
+  }
+  const start = new Date()
+  try {
+    await arweave.transactions.get(txId)
+  } catch (err) {
+    if (err.name === 'TimeoutError') {
+      partialMeasurement.timeout = true
+    }
+    return partialMeasurement
+  }
+  partialMeasurement.alive = true
+  partialMeasurement.durationMs = new Date().getTime() - start.getTime()
+  return partialMeasurement
+}
+
+const measure = async node => {
+  return {
+    node,
+    ping: await ping(node),
+    retrieval: await retrieve(node)
+  }
 }
 
 let nodes = await getNodes()
