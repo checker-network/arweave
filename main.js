@@ -5,24 +5,32 @@ const UPDATE_NODES_DELAY = 10 * ONE_MINUTE
 
 const getNodes = async () => {
   // TODO: Find a publicly documented API
-  const res = await fetch(
-    'https://api.viewblock.io/arweave/nodes?page=1&network=mainnet',
-    {
-      headers: {
-        Origin: 'https://viewblock.io'
+  const docs = []
+  let maxPage = Infinity
+  for (let page = 0; page < maxPage; page++) {
+    const res = await fetch(
+      `https://api.viewblock.io/arweave/nodes?page=${page + 1}&network=mainnet`,
+      {
+        headers: {
+          Origin: 'https://viewblock.io'
+        }
       }
+    )
+    const body = await res.json()
+    if (maxPage === Infinity) {
+      maxPage = body.pages
     }
-  )
-  const body = await res.json()
+    docs.push(...body.docs)
+  }
   const nodes = [
     {
       host: 'arweave.net',
       port: 443,
       protocol: 'https'
     },
-    ...body.docs
-      .map(d => d.id)
-      .sort()
+    ...docs
+      .map(doc => doc.id)
+      .filter(Boolean)
       .map(addr => {
         const [host, port] = addr.split(':')
         const protocol = IP_ADDRESS_REGEX.test(host) ? 'http' : 'https'
