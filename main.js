@@ -1,3 +1,5 @@
+/* global Arweave */
+
 import './vendor/arweave.js'
 import pTimeout, { TimeoutError } from './vendor/p-timeout.js'
 
@@ -161,6 +163,6 @@ while (true) {
     console.error('Error submitting measurement')
     console.error(err)
   }
-  console.log(`Waiting ${MEASUREMENT_DELAY/1_000} seconds...`)
+  console.log(`Waiting ${MEASUREMENT_DELAY / 1_000} seconds...`)
   await new Promise(resolve => setTimeout(resolve, MEASUREMENT_DELAY))
 }
